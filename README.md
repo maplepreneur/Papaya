@@ -39,4 +39,4 @@ omarchy theme update
 
 That pulls every theme you installed from git. When Papaya is the active theme, the hook refreshes the desktop from this repo. New wallpapers stay on disk. The current wallpaper is left where it is.
 
-`colors.toml` is the palette. Omarchy Quattro builds the terminal, browser, editor, and shell colors from it. Do not commit generated app configs into this repo.
+`colors.toml` is the palette. Omarchy Quattro builds the terminal, browser, editor, and shell colors from it. `shell.controls.toml` is merged on top when the theme is applied: idle controls are carbon with a papaya border, and the chosen control is a solid papaya fill. Do not commit generated app configs into this repo.

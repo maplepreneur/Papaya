@@ -1,0 +1,35 @@
+[controls]
+# Papaya control chrome. Omarchy merges this over the generated shell.toml
+# when the theme is applied, so buttons and switches follow the accent.
+
+# Idle boxes and off switches: carbon fill, papaya border.
+normal-color = "background"
+normal-fill-alpha = 1
+normal-border = "accent"
+normal-border-width = 1
+normal-border-alpha = 1
+
+# Hover and keyboard cursor: papaya edge, a light papaya wash.
+hover-cursor-color = "accent"
+hover-cursor-fill-alpha = 0.16
+hover-cursor-border = "accent"
+hover-cursor-border-width = 1
+hover-cursor-border-alpha = 1
+
+focus-color = "accent"
+focus-fill-alpha = 0.16
+focus-border = "accent"
+focus-border-width = 1
+focus-border-alpha = 1
+
+# Chosen shared controls: papaya border and a papaya wash. A fully solid fill
+# would sit under white label text in the stock buttons, so the network panel
+# paints its own solid papaya choice boxes with carbon text.
+selected-color = "accent"
+selected-fill-alpha = 0.22
+selected-border = "accent"
+selected-border-width = 1
+selected-border-alpha = 1
+
+pressed-color = "accent"
+pressed-fill-alpha = 0.34
