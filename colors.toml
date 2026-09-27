@@ -1,0 +1,32 @@
+mode = "dark"
+
+# McLaren F1: cool carbon black, with papaya #ff8000 as the primary accent.
+accent = "#ff8000"
+selection = "#241910"
+muted = "#7d7872"
+
+background = "#0c0d0f"
+dark_background = "#08090b"
+darker_background = "#040506"
+lighter_background = "#1a1c1f"
+
+foreground = "#f4f5f6"
+dark_foreground = "#9aa0a6"
+light_foreground = "#ffffff"
+bright_foreground = "#ffffff"
+
+red = "#ff5c45"
+yellow = "#ffb03a"
+orange = "#ff8000"
+green = "#7dba78"
+cyan = "#aeb6bf"
+blue = "#ff8000"
+magenta = "#d7d2cc"
+brown = "#6b4a32"
+
+bright_red = "#ff7a66"
+bright_yellow = "#ffc266"
+bright_green = "#98d093"
+bright_cyan = "#cdd3d9"
+bright_blue = "#ff8000"
+bright_magenta = "#f2efe9"

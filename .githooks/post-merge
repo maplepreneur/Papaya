@@ -1,0 +1,13 @@
+#!/bin/bash
+# After `omarchy theme update` pulls this theme, rebuild the live desktop
+# from colors.toml when Papaya is the theme in use.
+export PATH="/usr/share/omarchy/bin:${PATH:-/usr/bin}"
+set -euo pipefail
+
+name_file="${HOME}/.local/state/omarchy/current/theme.name"
+[[ -f $name_file ]] || exit 0
+
+current=$(tr -d '[:space:]' <"$name_file")
+[[ $current == "papaya" ]] || exit 0
+
+omarchy-theme-refresh
