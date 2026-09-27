@@ -1,12 +1,19 @@
 #!/bin/bash
-# Apply the Papaya screensaver and GNOME accent while this theme is active.
+# `omarchy theme install` ends by applying the theme, which runs this hook.
+# Omarchy will not execute a script from the theme repo on its own.
 set -euo pipefail
 
 theme="${1:-}"
+script="${HOME}/.config/omarchy/themes/papaya/bin/install-logo"
 branding="${HOME}/.config/omarchy/branding/screensaver.txt"
 papaya="${HOME}/.config/omarchy/themes/papaya/screensaver.txt"
 saved="${HOME}/.config/omarchy/branding/screensaver.txt.pre-papaya"
 accent_state="${HOME}/.local/state/omarchy/papaya-previous-accent"
+
+if [[ $theme == "papaya" && -x $script ]]; then
+  "$script" --quiet
+  exit 0
+fi
 
 if [[ -f $papaya ]]; then
   if [[ $theme == "papaya" ]]; then
@@ -20,17 +27,16 @@ if [[ -f $papaya ]]; then
   fi
 fi
 
-# McLaren papaya is the accent. The nearest named GNOME accent is orange.
-gnome_accent="orange"
 if command -v gsettings >/dev/null 2>&1 && [[ -n ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
   if [[ $theme == "papaya" ]]; then
+    mkdir -p "${HOME}/.local/state/omarchy"
     if [[ ! -f $accent_state ]]; then
-      current=$(gsettings get org.gnome.desktop.interface accent-color)
-      if [[ $current != "'$gnome_accent'" ]]; then
+      current=$(gsettings get org.gnome.desktop.interface accent-color || true)
+      if [[ -n ${current:-} && $current != "'orange'" ]]; then
         printf '%s\n' "$current" >"$accent_state"
       fi
     fi
-    gsettings set org.gnome.desktop.interface accent-color "$gnome_accent"
+    gsettings set org.gnome.desktop.interface accent-color orange || true
   elif [[ -f $accent_state ]]; then
     previous=$(tr -d "'" <"$accent_state")
     gsettings set org.gnome.desktop.interface accent-color "$previous"

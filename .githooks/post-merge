@@ -11,13 +11,11 @@ current=$(tr -d '[:space:]' <"$name_file")
 [[ $current == "papaya" ]] || exit 0
 
 root=$(git rev-parse --show-toplevel)
-plugin="${HOME}/.config/omarchy/plugins/papaya.logo"
-if [[ -d $plugin && -d $root/logo ]]; then
-  cp -a "$root/logo/." "$plugin/"
-fi
-if [[ -f $root/screensaver.txt ]]; then
-  mkdir -p "${HOME}/.config/omarchy/branding"
-  cp "$root/screensaver.txt" "${HOME}/.config/omarchy/branding/screensaver.txt"
+hook_dir="${HOME}/.config/omarchy/hooks/theme-set.d"
+if [[ -f $root/hooks/papaya-screensaver.hook ]]; then
+  mkdir -p "$hook_dir"
+  cp "$root/hooks/papaya-screensaver.hook" "${hook_dir}/papaya-screensaver.hook"
+  chmod 755 "${hook_dir}/papaya-screensaver.hook"
 fi
 
 omarchy-theme-refresh

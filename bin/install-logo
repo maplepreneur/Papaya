@@ -1,7 +1,11 @@
 #!/bin/bash
 # Put the McLaren speedmark on the bar in place of the Omarchy logo, and
 # install the McLaren screensaver that ships with this theme.
+# Quiet when the theme-set hook calls this during `omarchy theme install`.
 set -euo pipefail
+
+quiet=0
+[[ ${1:-} == "--quiet" ]] && quiet=1
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 plugin_id="papaya.logo"
@@ -26,6 +30,19 @@ fi
 if [[ -f $root/hooks/papaya-screensaver.hook ]]; then
   cp "$root/hooks/papaya-screensaver.hook" "${hook_dir}/papaya-screensaver.hook"
   chmod 755 "${hook_dir}/papaya-screensaver.hook"
+fi
+
+# McLaren papaya is the accent. The nearest named GNOME accent is orange.
+accent_state="${HOME}/.local/state/omarchy/papaya-previous-accent"
+if command -v gsettings >/dev/null 2>&1 && [[ -n ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
+  mkdir -p "${HOME}/.local/state/omarchy"
+  if [[ ! -f $accent_state ]]; then
+    current=$(gsettings get org.gnome.desktop.interface accent-color || true)
+    if [[ -n ${current:-} && $current != "'orange'" ]]; then
+      printf '%s\n' "$current" >"$accent_state"
+    fi
+  fi
+  gsettings set org.gnome.desktop.interface accent-color orange || true
 fi
 
 python3 - "$shell_json" "$plugin_id" <<'PY'
@@ -72,6 +89,8 @@ if command -v omarchy-shell >/dev/null 2>&1; then
   omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
 fi
 
-echo "McLaren logo is on the bar (${plugin_id})."
-echo "Left click opens the menu. Right click opens a terminal."
-echo "Screensaver installed to ${branding_dir}/screensaver.txt"
+if (( quiet == 0 )); then
+  echo "McLaren logo is on the bar (${plugin_id})."
+  echo "Left click opens the menu. Right click opens a terminal."
+  echo "Screensaver installed to ${branding_dir}/screensaver.txt"
+fi

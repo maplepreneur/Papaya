@@ -18,13 +18,16 @@ git -C ~/.config/omarchy/themes/papaya config core.hooksPath .githooks
 
 ## Bar logo and screensaver
 
-The McLaren speedmark is in `logo/`, and the screensaver art is `screensaver.txt`. Omarchy leaves the bar logo alone until you install it:
+The speedmark is in `logo/`, and the screensaver art is `screensaver.txt`. Omarchy's installer applies colors and wallpapers. It does not run a script from the theme, so the logo and screensaver need one command on a new machine:
 
 ```bash
+omarchy theme install https://github.com/maplepreneur/Papaya.git
 ~/.config/omarchy/themes/papaya/bin/install-logo
 ```
 
-That replaces the Omarchy mark on the left of the bar. Left click still opens the menu, and right click still opens a terminal. It also installs the McLaren screensaver.
+That replaces the Omarchy mark on the left of the bar and installs the screensaver. Left click still opens the menu. Right click still opens a terminal.
+
+The command also registers a theme hook. After that, `omarchy theme install` and `omarchy theme set papaya` apply the logo and screensaver themselves, because both finish by setting the theme.
 
 ## Update
 
