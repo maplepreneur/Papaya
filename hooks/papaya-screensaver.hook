@@ -17,6 +17,10 @@ if [[ $theme == "papaya" && -x $script ]]; then
   exit 0
 fi
 
+if [[ $theme != "papaya" && -x $script ]]; then
+  "$script" --revert || true
+fi
+
 if [[ $theme != "papaya" && -x $highlight ]]; then
   "$highlight" remove || true
 fi

@@ -5,9 +5,185 @@
 set -euo pipefail
 
 quiet=0
-[[ ${1:-} == "--quiet" ]] && quiet=1
+revert=0
+for arg in "$@"; do
+  case "$arg" in
+    --quiet) quiet=1 ;;
+    --revert) revert=1 ;;
+  esac
+done
 
 root=$(cd "$(dirname "$0")/.." && pwd)
+state_dir="${HOME}/.local/state/omarchy"
+
+reload_opencode() {
+  if pgrep -x opencode >/dev/null 2>&1; then
+    killall -SIGUSR2 opencode >/dev/null 2>&1 || true
+  fi
+}
+
+install_prompt() {
+  local dest="${HOME}/.config/starship.toml"
+  local src="$root/starship.toml"
+  local backup="${state_dir}/papaya-starship.toml"
+  local created="${state_dir}/papaya-starship-created"
+  [[ -f $src ]] || return 0
+  mkdir -p "${HOME}/.config" "$state_dir"
+  if [[ ! -f $dest ]]; then
+    cp "$src" "$dest"
+    touch "$created"
+    return 0
+  fi
+  if grep -q '# papaya-starship' "$dest"; then
+    cp "$src" "$dest"
+    return 0
+  fi
+  # The prompt written before this file carried a marker.
+  if grep -q '#ff8000' "$dest" && grep -q '#ff5c45' "$dest"; then
+    [[ -f $backup ]] || cp "$dest" "$backup"
+    cp "$src" "$dest"
+  fi
+}
+
+revert_prompt() {
+  local dest="${HOME}/.config/starship.toml"
+  local backup="${state_dir}/papaya-starship.toml"
+  local created="${state_dir}/papaya-starship-created"
+  [[ -f $dest ]] || return 0
+  grep -q '# papaya-starship' "$dest" || return 0
+  if [[ -f $backup ]]; then
+    cp "$backup" "$dest"
+    rm -f "$backup"
+  elif [[ -f $created ]]; then
+    rm -f "$dest" "$created"
+  fi
+}
+
+install_opencode() {
+  local themes="${HOME}/.config/opencode/themes"
+  [[ -f $root/opencode/papaya.json ]] || return 0
+  mkdir -p "$themes" "$state_dir"
+  cp "$root/opencode/papaya.json" "$themes/papaya.json"
+  python3 - "$state_dir" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+state = Path(sys.argv[1])
+home = Path.home()
+
+def load(path):
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())
+
+def dump(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n")
+
+def remember(path, previous):
+    if path.exists():
+        return
+    path.write_text(previous + "\n")
+
+tui_path = home / ".config/opencode/tui.json"
+tui_state = state / "papaya-opencode-tui-theme"
+tui = load(tui_path)
+if tui is None:
+    remember(tui_state, "__missing__")
+    tui = {"$schema": "https://opencode.ai/tui.json", "theme": "papaya"}
+else:
+    previous = tui.get("theme", "system")
+    if isinstance(previous, str) and previous != "papaya":
+        remember(tui_state, previous)
+    tui["theme"] = "papaya"
+dump(tui_path, tui)
+
+cli_path = home / ".config/opencode/cli.json"
+cli_state = state / "papaya-opencode-cli-theme"
+cli = load(cli_path)
+if cli is None:
+    remember(cli_state, "__missing__")
+    cli = {"$schema": "https://opencode.ai/v2/cli.json", "theme": {"name": "papaya"}}
+else:
+    theme = cli.get("theme")
+    if isinstance(theme, dict):
+        previous = str(theme.get("name", "system"))
+        theme["name"] = "papaya"
+        cli["theme"] = theme
+    elif isinstance(theme, str):
+        previous = theme
+        cli["theme"] = {"name": "papaya"}
+    else:
+        previous = "system"
+        cli["theme"] = {"name": "papaya"}
+    if previous != "papaya":
+        remember(cli_state, previous)
+dump(cli_path, cli)
+PY
+  reload_opencode
+}
+
+revert_opencode() {
+  python3 - "$state_dir" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+state = Path(sys.argv[1])
+home = Path.home()
+
+def load(path):
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())
+
+def dump(path, data):
+    path.write_text(json.dumps(data, indent=2) + "\n")
+
+tui_path = home / ".config/opencode/tui.json"
+tui_state = state / "papaya-opencode-tui-theme"
+if tui_state.exists() and tui_path.exists():
+    previous = tui_state.read_text().strip()
+    tui = load(tui_path) or {}
+    if tui.get("theme") == "papaya":
+        if previous == "__missing__":
+            tui_path.unlink()
+        else:
+            tui["theme"] = previous
+            dump(tui_path, tui)
+    tui_state.unlink()
+
+cli_path = home / ".config/opencode/cli.json"
+cli_state = state / "papaya-opencode-cli-theme"
+if cli_state.exists() and (cli_path.exists() or cli_state.read_text().strip() == "__missing__"):
+    previous = cli_state.read_text().strip()
+    if previous == "__missing__":
+        if cli_path.exists():
+            cli = load(cli_path) or {}
+            theme = cli.get("theme")
+            if isinstance(theme, dict) and theme.get("name") == "papaya":
+                cli_path.unlink()
+    elif cli_path.exists():
+        cli = load(cli_path) or {}
+        theme = cli.get("theme")
+        if isinstance(theme, dict) and theme.get("name") == "papaya":
+            theme["name"] = previous
+            cli["theme"] = theme
+            dump(cli_path, cli)
+        elif theme == "papaya":
+            cli["theme"] = previous
+            dump(cli_path, cli)
+    cli_state.unlink()
+PY
+  reload_opencode
+}
+
+if (( revert == 1 )); then
+  revert_prompt
+  revert_opencode
+  exit 0
+fi
 plugin_id="papaya.logo"
 plugin_dir="${HOME}/.config/omarchy/plugins/${plugin_id}"
 shell_json="${HOME}/.config/omarchy/shell.json"
@@ -93,9 +269,13 @@ if [[ -x $root/bin/browser-highlight ]]; then
   "$root/bin/browser-highlight" install
 fi
 
+install_prompt
+install_opencode
+
 if (( quiet == 0 )); then
   echo "McLaren logo is on the bar (${plugin_id})."
   echo "Left click opens the menu. Right click opens a terminal."
   echo "Screensaver installed to ${branding_dir}/screensaver.txt"
   echo "Selected text in Chrome and Chromium is papaya #ff8000 after a browser restart."
+  echo "Prompt and OpenCode use the Papaya palette."
 fi

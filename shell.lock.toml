@@ -1,0 +1,13 @@
+# Lock screen. Idle border is deep papaya, the field lights up to #ff8000
+# while typing, and a wrong password turns rose.
+background = "#0c0d0f"
+background-alpha = 0.82
+text = "#f4f5f6"
+placeholder = "#938e86"
+text-error = "#e8456b"
+border = "#c45a00"
+border-active = "#ff8000"
+border-error = "#e8456b"
+border-alpha = 1.0
+selection = "#ff8000"
+selection-alpha = 0.45

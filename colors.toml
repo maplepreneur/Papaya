@@ -1,9 +1,10 @@
 mode = "dark"
 
-# McLaren F1: cool carbon black, with papaya #ff8000 as the primary accent.
+# McLaren F1. Cool carbon, papaya #ff8000 as the accent and the orange.
+# Syntax hues stay off that orange so code, errors, and warnings read apart.
 accent = "#ff8000"
-selection = "#241910"
-muted = "#7d7872"
+selection = "#463326"
+muted = "#938e86"
 
 background = "#0c0d0f"
 dark_background = "#08090b"
@@ -11,22 +12,25 @@ darker_background = "#040506"
 lighter_background = "#1a1c1f"
 
 foreground = "#f4f5f6"
-dark_foreground = "#9aa0a6"
+dark_foreground = "#a3a8ae"
 light_foreground = "#ffffff"
 bright_foreground = "#ffffff"
 
-red = "#ff5c45"
-yellow = "#ffb03a"
+red = "#e8456b"
+yellow = "#f0d060"
 orange = "#ff8000"
-green = "#7dba78"
-cyan = "#aeb6bf"
-blue = "#ff8000"
-magenta = "#d7d2cc"
-brown = "#6b4a32"
+green = "#6fbf78"
+cyan = "#5fd0d0"
+blue = "#6cb6ff"
+magenta = "#c792ea"
+brown = "#a87850"
 
-bright_red = "#ff7a66"
-bright_yellow = "#ffc266"
-bright_green = "#98d093"
-bright_cyan = "#cdd3d9"
-bright_blue = "#ff8000"
-bright_magenta = "#f2efe9"
+bright_red = "#f0849d"
+bright_yellow = "#f5e096"
+bright_green = "#a0d5a6"
+bright_cyan = "#95e0e0"
+bright_blue = "#9ecfff"
+bright_magenta = "#dab7f1"
+
+# Active window border: deep papaya into #ff8000.
+hyprland_active_border = "rgba(c45a00ee) rgba(ff8000ee) 45deg"
