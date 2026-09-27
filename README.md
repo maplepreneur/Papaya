@@ -29,7 +29,7 @@ That replaces the Omarchy mark on the left of the bar and installs the screensav
 
 The command also registers a theme hook. After that, `omarchy theme install` and `omarchy theme set papaya` apply the logo and screensaver themselves, because both finish by setting the theme.
 
-Selected text on web pages is papaya `#ff8000` with carbon text. Chrome’s own address-bar selection and settings row follow a separate browser color. `chromium.theme` is `14,12,11`, a near-carbon seed whose hue is papaya, so the window stays dark and those highlights shift from blue to papaya. The settings row uses that color when Chrome’s WebUI refresh is enabled, which the theme adds to the browser flags. Restart Chrome after installing or updating the theme. An open window keeps the previous colors until then.
+Selected text on web pages is papaya `#ff8000` with carbon text. Chrome’s address bar and the selected settings row are papaya as well. The address-bar selection follows `chromium.theme` (`14,12,11`), a near-carbon seed, so the window stays dark and that highlight is papaya with white text. The settings row is `#ff8000` with dark text. `bin/papaya-chrome` paints the row, and the installer registers it as the Chrome launcher. Quit Chrome and open it again after installing or updating the theme. An open window keeps the previous colors until then.
 
 ## Update
 

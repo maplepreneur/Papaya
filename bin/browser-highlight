@@ -18,10 +18,8 @@ from pathlib import Path
 mode, ext, config = sys.argv[1], sys.argv[2], Path(sys.argv[3])
 feature = "WebuiRefresh2026"
 
-def with_feature(line):
+def without_feature(line):
     feats = [part for part in line.split("=", 1)[1].split(",") if part and part != feature]
-    if mode == "install":
-        feats.append(feature)
     if not feats:
         return None
     return "--enable-features=" + ",".join(feats)
@@ -30,12 +28,10 @@ for path in sorted(config.glob("*-flags.conf")):
     text = path.read_text() if path.exists() else ""
     lines = text.splitlines()
     found_ext = False
-    found_feature = False
     out = []
     for line in lines:
         if line.startswith("--enable-features="):
-            found_feature = True
-            updated = with_feature(line)
+            updated = without_feature(line)
             if updated:
                 out.append(updated)
             continue
@@ -55,8 +51,6 @@ for path in sorted(config.glob("*-flags.conf")):
             out.append("--load-extension=" + ",".join(parts))
     if mode == "install" and not found_ext:
         out.append("--load-extension=" + ext)
-    if mode == "install" and not found_feature:
-        out.append("--enable-features=" + feature)
     path.write_text("\n".join(out) + ("\n" if out else ""))
 PY
 }
@@ -149,18 +143,53 @@ for section in parser.sections():
 PY
 }
 
+install_chrome_launcher() {
+  local wrapper="${root}/bin/papaya-chrome"
+  local src="/usr/share/applications/google-chrome.desktop"
+  local dest="${HOME}/.local/share/applications/google-chrome.desktop"
+  [[ -x $wrapper && -f $src ]] || return 0
+  mkdir -p "${dest%/*}"
+  python3 - "$src" "$dest" "$wrapper" <<'PY'
+import sys
+from pathlib import Path
+
+src, dest, wrapper = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
+text = src.read_text()
+lines = []
+seen = False
+for line in text.splitlines():
+    if line.startswith("Exec=/usr/bin/google-chrome-stable"):
+        line = "Exec=" + wrapper + line.removeprefix("Exec=/usr/bin/google-chrome-stable")
+    lines.append(line)
+    if line.strip() == "[Desktop Entry]" and not seen:
+        lines.append("X-Papaya-Chrome=true")
+        seen = True
+dest.write_text("\n".join(lines) + "\n")
+PY
+}
+
+remove_chrome_launcher() {
+  local dest="${HOME}/.local/share/applications/google-chrome.desktop"
+  [[ -f $dest ]] || return 0
+  if grep -q '^X-Papaya-Chrome=true$' "$dest"; then
+    rm -f "$dest"
+  fi
+}
+
 case "$action" in
   install)
     update_flags install
     write_gtk "${HOME}/.config/gtk-3.0/gtk.css"
     write_gtk "${HOME}/.config/gtk-4.0/gtk.css"
     write_firefox install
+    install_chrome_launcher
     ;;
   remove)
     update_flags remove
     strip_gtk "${HOME}/.config/gtk-3.0/gtk.css"
     strip_gtk "${HOME}/.config/gtk-4.0/gtk.css"
     write_firefox remove
+    remove_chrome_launcher
     ;;
   *)
     echo "Usage: browser-highlight install|remove" >&2

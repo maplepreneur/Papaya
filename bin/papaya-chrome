@@ -1,0 +1,129 @@
+#!/bin/bash
+# Launch Chrome with the Papaya settings row. The address bar comes from
+# chromium.theme; this overlays the row color Chrome hardcodes in resources.pak.
+set -euo pipefail
+
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/papaya"
+src=/opt/google/chrome/resources.pak
+real=/opt/google/chrome/chrome
+patch_id=nav-ff8000-1
+
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
+flags=()
+if [[ -f ${XDG_CONFIG_HOME}/chrome-flags.conf ]]; then
+  while IFS= read -r line || [[ -n $line ]]; do
+    [[ -z $line || $line == \#* ]] && continue
+    flags+=("$line")
+  done <"${XDG_CONFIG_HOME}/chrome-flags.conf"
+fi
+
+prepare_pak() {
+  mkdir -p "$cache"
+  exec 9>"$cache/resources.lock"
+  flock 9
+  local stamp="$cache/resources.stamp" out="$cache/resources.pak"
+  local sig current
+  sig="$(stat -c '%s %Y' "$src") $patch_id"
+  current=$(cat "$stamp" 2>/dev/null || true)
+  if [[ $current != "$sig" || ! -f $out ]]; then
+    if python3 - "$src" "$out.new" <<'PY'
+import gzip, struct, sys
+from pathlib import Path
+
+def fit(color, width):
+    pad = width - len(color)
+    if pad < 5:
+        raise SystemExit(f"cannot pad {color} to {width}")
+    return color + "/*" + ("x" * (pad - 4)) + "*/"
+
+pairs = [
+    (
+        "--cr-nav-menu-item-background-color-selected:var(--google-blue-300)",
+        "--cr-nav-menu-item-background-color-selected:" + fit("rgb(255,128,0)", len("var(--google-blue-300)")),
+    ),
+    (
+        "--cr-nav-menu-item-background-color-selected:var(--google-blue-50)",
+        "--cr-nav-menu-item-background-color-selected:" + fit("rgb(255,128,0)", len("var(--google-blue-50)")),
+    ),
+    (
+        "--cr-nav-menu-item-color-selected:var(--google-blue-700)",
+        "--cr-nav-menu-item-color-selected:var(--google-grey-900)",
+    ),
+    (
+        "--cr-nav-menu-item-background-color-selected:var(--color-nav-menu-item-background-selected)",
+        "--cr-nav-menu-item-background-color-selected:" + fit("rgb(255,128,0)", len("var(--color-nav-menu-item-background-selected)")),
+    ),
+    (
+        "--cr-nav-menu-item-color-selected:var(--color-nav-menu-item-selected)",
+        "--cr-nav-menu-item-color-selected:" + fit("rgb(12,13,15)", len("var(--color-nav-menu-item-selected)")),
+    ),
+]
+repls = []
+for old, new in pairs:
+    if len(old) != len(new):
+        raise SystemExit(f"length mismatch for {old}")
+    repls.append((old.encode(), new.encode()))
+
+src, dest = Path(sys.argv[1]), Path(sys.argv[2])
+data = src.read_bytes()
+encoding, count, alias_count = struct.unpack_from("<BxxxHH", data, 4)
+if struct.unpack_from("<I", data, 0)[0] != 5:
+    raise SystemExit(2)
+pos = 12
+entries = []
+for _ in range(count + 1):
+    entries.append(struct.unpack_from("<HI", data, pos))
+    pos += 6
+alias = data[pos:pos + alias_count * 4]
+if entries[0][1] != pos + len(alias) or entries[-1][1] != len(data):
+    raise SystemExit(2)
+blobs = [data[entries[i][1]:entries[i + 1][1]] for i in range(count)]
+found = False
+for i, blob in enumerate(blobs):
+    gzipped = blob.startswith(b"\x1f\x8b")
+    raw = gzip.decompress(blob) if gzipped else blob
+    if not any(old in raw for old, _ in repls):
+        continue
+    found = True
+    new = raw
+    for old, rep in repls:
+        new = new.replace(old, rep)
+    blobs[i] = gzip.compress(new, mtime=0) if gzipped else new
+if not found:
+    raise SystemExit(2)
+out = bytearray(data[:12])
+index_at = len(out)
+out += b"\x00" * ((count + 1) * 6)
+out += alias
+offsets = []
+for blob in blobs:
+    offsets.append(len(out))
+    out += blob
+offsets.append(len(out))
+for i, (rid, _) in enumerate(entries):
+    struct.pack_into("<HI", out, index_at + i * 6, 0 if i == count else rid, offsets[i])
+dest.write_bytes(out)
+PY
+    then
+      mv "$out.new" "$out"
+      printf '%s\n' "$sig" >"$stamp"
+    else
+      rm -f "$out.new"
+    fi
+  fi
+  if [[ -f $out ]]; then
+    printf '%s\n' "$out"
+  fi
+}
+
+export CHROME_VERSION_EXTRA="${CHROME_VERSION_EXTRA:-stable}"
+pak=""
+if [[ -f $src && -x /usr/bin/bwrap ]]; then
+  pak=$(prepare_pak || true)
+fi
+if [[ -n $pak ]]; then
+  exec /usr/bin/bwrap --share-net --dev-bind / / \
+    --bind "$pak" "$src" \
+    -- "$real" "${flags[@]}" "$@"
+fi
+exec "$real" "${flags[@]}" "$@"
