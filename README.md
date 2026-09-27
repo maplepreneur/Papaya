@@ -16,6 +16,16 @@ Turn on the update hook once, in the installed copy:
 git -C ~/.config/omarchy/themes/papaya config core.hooksPath .githooks
 ```
 
+## Bar logo and screensaver
+
+The McLaren speedmark is in `logo/`, and the screensaver art is `screensaver.txt`. Omarchy leaves the bar logo alone until you install it:
+
+```bash
+~/.config/omarchy/themes/papaya/bin/install-logo
+```
+
+That replaces the Omarchy mark on the left of the bar. Left click still opens the menu, and right click still opens a terminal. It also installs the McLaren screensaver.
+
 ## Update
 
 ```bash

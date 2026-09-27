@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "papaya.logo",
+  "name": "McLaren logo",
+  "version": "1.0.0",
+  "author": "maplepreneur",
+  "description": "McLaren speedmark in the bar. Left click opens the menu, right click opens a terminal.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "McLaren logo",
+    "description": "Replaces the Omarchy bar logo with the McLaren speedmark.",
+    "category": "Compositor",
+    "allowMultiple": false,
+    "defaultSection": "left"
+  }
+}

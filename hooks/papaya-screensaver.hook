@@ -1,0 +1,39 @@
+#!/bin/bash
+# Apply the Papaya screensaver and GNOME accent while this theme is active.
+set -euo pipefail
+
+theme="${1:-}"
+branding="${HOME}/.config/omarchy/branding/screensaver.txt"
+papaya="${HOME}/.config/omarchy/themes/papaya/screensaver.txt"
+saved="${HOME}/.config/omarchy/branding/screensaver.txt.pre-papaya"
+accent_state="${HOME}/.local/state/omarchy/papaya-previous-accent"
+
+if [[ -f $papaya ]]; then
+  if [[ $theme == "papaya" ]]; then
+    if [[ -f $branding ]] && ! cmp -s "$branding" "$papaya"; then
+      cp "$branding" "$saved"
+    fi
+    cp "$papaya" "$branding"
+  elif [[ -f $saved && -f $branding ]] && cmp -s "$branding" "$papaya"; then
+    cp "$saved" "$branding"
+    rm -f "$saved"
+  fi
+fi
+
+# McLaren papaya is the accent. The nearest named GNOME accent is orange.
+gnome_accent="orange"
+if command -v gsettings >/dev/null 2>&1 && [[ -n ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
+  if [[ $theme == "papaya" ]]; then
+    if [[ ! -f $accent_state ]]; then
+      current=$(gsettings get org.gnome.desktop.interface accent-color)
+      if [[ $current != "'$gnome_accent'" ]]; then
+        printf '%s\n' "$current" >"$accent_state"
+      fi
+    fi
+    gsettings set org.gnome.desktop.interface accent-color "$gnome_accent"
+  elif [[ -f $accent_state ]]; then
+    previous=$(tr -d "'" <"$accent_state")
+    gsettings set org.gnome.desktop.interface accent-color "$previous"
+    rm -f "$accent_state"
+  fi
+fi

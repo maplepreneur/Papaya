@@ -1,0 +1,77 @@
+#!/bin/bash
+# Put the McLaren speedmark on the bar in place of the Omarchy logo, and
+# install the McLaren screensaver that ships with this theme.
+set -euo pipefail
+
+root=$(cd "$(dirname "$0")/.." && pwd)
+plugin_id="papaya.logo"
+plugin_dir="${HOME}/.config/omarchy/plugins/${plugin_id}"
+shell_json="${HOME}/.config/omarchy/shell.json"
+branding_dir="${HOME}/.config/omarchy/branding"
+hook_dir="${HOME}/.config/omarchy/hooks/theme-set.d"
+
+mkdir -p "$plugin_dir" "$branding_dir" "$hook_dir"
+cp -a "$root/logo/." "$plugin_dir/"
+chmod 755 "$plugin_dir"
+
+if [[ -f $root/screensaver.txt ]]; then
+  branding="${branding_dir}/screensaver.txt"
+  saved="${branding_dir}/screensaver.txt.pre-papaya"
+  if [[ -f $branding ]] && ! cmp -s "$branding" "$root/screensaver.txt"; then
+    cp "$branding" "$saved"
+  fi
+  cp "$root/screensaver.txt" "$branding"
+fi
+
+if [[ -f $root/hooks/papaya-screensaver.hook ]]; then
+  cp "$root/hooks/papaya-screensaver.hook" "${hook_dir}/papaya-screensaver.hook"
+  chmod 755 "${hook_dir}/papaya-screensaver.hook"
+fi
+
+python3 - "$shell_json" "$plugin_id" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path, plugin_id = Path(sys.argv[1]), sys.argv[2]
+previous = {"omarchy.menu", "maplepreneur.mclaren-logo", plugin_id}
+data = json.loads(path.read_text()) if path.exists() else {}
+bar = data.setdefault("bar", {})
+layout = bar.setdefault("layout", {})
+placed = False
+
+for section in ("left", "center", "right"):
+    items = layout.get(section)
+    if not isinstance(items, list):
+        continue
+    kept = []
+    for item in items:
+        entry = item if isinstance(item, dict) else {"id": item}
+        widget_id = entry.get("id")
+        if widget_id in previous:
+            if placed:
+                continue
+            entry["id"] = plugin_id
+            placed = True
+        kept.append(entry)
+    layout[section] = kept
+
+if not placed:
+    layout.setdefault("left", [])
+    layout["left"].insert(0, {"id": plugin_id})
+
+path.write_text(json.dumps(data, indent=2) + "\n")
+PY
+
+# The old logo plugin id is no longer on the bar.
+if [[ -d ${HOME}/.config/omarchy/plugins/maplepreneur.mclaren-logo ]]; then
+  rm -rf "${HOME}/.config/omarchy/plugins/maplepreneur.mclaren-logo"
+fi
+
+if command -v omarchy-shell >/dev/null 2>&1; then
+  omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
+fi
+
+echo "McLaren logo is on the bar (${plugin_id})."
+echo "Left click opens the menu. Right click opens a terminal."
+echo "Screensaver installed to ${branding_dir}/screensaver.txt"
