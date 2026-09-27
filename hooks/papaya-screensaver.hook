@@ -10,9 +10,15 @@ papaya="${HOME}/.config/omarchy/themes/papaya/screensaver.txt"
 saved="${HOME}/.config/omarchy/branding/screensaver.txt.pre-papaya"
 accent_state="${HOME}/.local/state/omarchy/papaya-previous-accent"
 
+highlight="${HOME}/.config/omarchy/themes/papaya/bin/browser-highlight"
+
 if [[ $theme == "papaya" && -x $script ]]; then
   "$script" --quiet
   exit 0
+fi
+
+if [[ $theme != "papaya" && -x $highlight ]]; then
+  "$highlight" remove || true
 fi
 
 if [[ -f $papaya ]]; then

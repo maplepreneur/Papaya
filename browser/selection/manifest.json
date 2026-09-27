@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Papaya selection",
+  "version": "1.0.0",
+  "description": "Papaya orange text highlight for the Papaya Omarchy theme",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["selection.css"],
+      "js": ["selection.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ]
+}

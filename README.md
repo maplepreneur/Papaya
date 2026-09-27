@@ -29,6 +29,8 @@ That replaces the Omarchy mark on the left of the bar and installs the screensav
 
 The command also registers a theme hook. After that, `omarchy theme install` and `omarchy theme set papaya` apply the logo and screensaver themselves, because both finish by setting the theme.
 
+Selected text in Chrome and Chromium is papaya `#ff8000`. Restart the browser after installing or updating the theme so it loads that highlight.
+
 ## Update
 
 ```bash

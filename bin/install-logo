@@ -89,8 +89,13 @@ if command -v omarchy-shell >/dev/null 2>&1; then
   omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
 fi
 
+if [[ -x $root/bin/browser-highlight ]]; then
+  "$root/bin/browser-highlight" install
+fi
+
 if (( quiet == 0 )); then
   echo "McLaren logo is on the bar (${plugin_id})."
   echo "Left click opens the menu. Right click opens a terminal."
   echo "Screensaver installed to ${branding_dir}/screensaver.txt"
+  echo "Selected text in Chrome and Chromium is papaya #ff8000 after a browser restart."
 fi

@@ -1,0 +1,150 @@
+#!/bin/bash
+# Install or remove the papaya text-selection highlight for browsers.
+set -euo pipefail
+
+action="${1:-install}"
+root=$(cd "$(dirname "$0")/.." && pwd)
+ext="${root}/browser/selection"
+marker_start="/* papaya-selection-start */"
+marker_end="/* papaya-selection-end */"
+snippet=$(<"$root/gtk.css")
+
+update_flags() {
+  local mode=$1
+  python3 - "$mode" "$ext" "$HOME/.config" <<'PY'
+import sys
+from pathlib import Path
+
+mode, ext, config = sys.argv[1], sys.argv[2], Path(sys.argv[3])
+for path in sorted(config.glob("*-flags.conf")):
+    text = path.read_text() if path.exists() else ""
+    lines = text.splitlines()
+    found = False
+    out = []
+    for line in lines:
+        if not line.startswith("--load-extension="):
+            out.append(line)
+            continue
+        found = True
+        parts = [
+            part for part in line.split("=", 1)[1].split(",")
+            if part and part != ext and not (
+                part.rstrip("/").endswith("browser/selection") and "papaya" in part.lower()
+            )
+        ]
+        if mode == "install":
+            parts.append(ext)
+        if parts:
+            out.append("--load-extension=" + ",".join(parts))
+    if mode == "install" and not found:
+        out.append("--load-extension=" + ext)
+    path.write_text("\n".join(out) + ("\n" if out else ""))
+PY
+}
+
+write_gtk() {
+  local file=$1
+  python3 - "$file" "$marker_start" "$marker_end" "$snippet" <<'PY'
+import sys
+from pathlib import Path
+
+path, start, end, snippet = Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
+text = path.read_text() if path.exists() else ""
+block = snippet if snippet.endswith("\n") else snippet + "\n"
+if start in text and end in text:
+    pre, _, rest = text.partition(start)
+    _, _, post = rest.partition(end)
+    text = pre + block + post.lstrip("\n")
+else:
+    if text and not text.endswith("\n"):
+        text += "\n"
+    text += block
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(text)
+PY
+}
+
+strip_gtk() {
+  local file=$1
+  [[ -f $file ]] || return 0
+  python3 - "$file" "$marker_start" "$marker_end" <<'PY'
+import sys
+from pathlib import Path
+
+path, start, end = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+text = path.read_text()
+if start not in text or end not in text:
+    raise SystemExit(0)
+pre, _, rest = text.partition(start)
+_, _, post = rest.partition(end)
+text = (pre + post.lstrip("\n")).strip()
+if text:
+    path.write_text(text + "\n")
+else:
+    path.unlink()
+PY
+}
+
+write_firefox() {
+  local mode=$1
+  python3 - "$mode" "$snippet" "$HOME/.mozilla/firefox" <<'PY'
+import configparser
+import sys
+from pathlib import Path
+
+mode, snippet, firefox = sys.argv[1], sys.argv[2], Path(sys.argv[3])
+ini = firefox / "profiles.ini"
+if not ini.exists():
+    raise SystemExit(0)
+parser = configparser.RawConfigParser()
+parser.read(ini)
+css = "::selection, ::-moz-selection {\n  background-color: #ff8000 !important;\n  color: #0c0d0f !important;\n}\n"
+marker = "/* papaya-selection */\n"
+for section in parser.sections():
+    if not parser.has_option(section, "Path"):
+        continue
+    profile = Path(parser.get(section, "Path"))
+    if not profile.is_absolute():
+        profile = firefox / profile
+    chrome = profile / "chrome"
+    sheet = chrome / "userContent.css"
+    user_js = profile / "user.js"
+    if mode == "remove":
+        if sheet.exists():
+            text = sheet.read_text().replace(marker + css, "")
+            if text.strip():
+                sheet.write_text(text)
+            else:
+                sheet.unlink()
+        continue
+    chrome.mkdir(parents=True, exist_ok=True)
+    current = sheet.read_text() if sheet.exists() else ""
+    if marker not in current:
+        if current and not current.endswith("\n"):
+            current += "\n"
+        sheet.write_text(current + marker + css)
+    pref = 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);\n'
+    prefs = user_js.read_text() if user_js.exists() else ""
+    if pref not in prefs:
+        user_js.write_text(prefs + pref)
+PY
+}
+
+case "$action" in
+  install)
+    update_flags install
+    write_gtk "${HOME}/.config/gtk-3.0/gtk.css"
+    write_gtk "${HOME}/.config/gtk-4.0/gtk.css"
+    write_firefox install
+    ;;
+  remove)
+    update_flags remove
+    strip_gtk "${HOME}/.config/gtk-3.0/gtk.css"
+    strip_gtk "${HOME}/.config/gtk-4.0/gtk.css"
+    write_firefox remove
+    ;;
+  *)
+    echo "Usage: browser-highlight install|remove" >&2
+    exit 1
+    ;;
+esac
