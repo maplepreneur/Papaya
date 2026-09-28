@@ -43,6 +43,6 @@ omarchy theme update
 
 That pulls every theme you installed from git. When Papaya is the active theme, the hook refreshes the desktop from this repo. New wallpapers stay on disk. The current wallpaper is left where it is.
 
-Wallpapers 01, 04, 05, and 06 are upscaled with [Upscayl](https://upscayl.org/) so they cover a 2880×1920 panel. The other three were already larger than that.
+All seven wallpapers are the same McLaren shots, restored with [Upscayl](https://upscayl.org/) so the JPEG softness is cleaned up and a 2880×1920 panel is covered. 01, 04, 05, and 06 are twice the original size. 02, 03, and 07 stay at their original size.
 
 `colors.toml` is the palette. Omarchy Quattro builds the terminal, editor, shell, and lock screen from it. Active window borders run from deep papaya `#c45a00` into `#ff8000`. `chromium.theme` is shipped on purpose: the generated file would be the carbon background, and Chrome treats that as a blue-tinted seed, so the address bar stays blue. `shell.controls.toml` is merged on top when the theme is applied: idle controls are carbon with a papaya border, and hover, focus, and the chosen control are a light papaya wash (`selected-fill-alpha` 0.22) with that same border. `shell.lock.toml` is the lock screen: a carbon field, a papaya border that brightens while typing, and rose for a wrong password. The prompt in `starship.toml` is white for the path and git status, papaya for the branch and the chevron, and rose for a failed command. Do not commit other generated app configs into this repo.
