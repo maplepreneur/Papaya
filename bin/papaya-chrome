@@ -1,6 +1,10 @@
 #!/bin/bash
 # Launch Chrome with the Papaya settings row. The address bar comes from
 # chromium.theme; this overlays the row color Chrome hardcodes in resources.pak.
+#
+# The overlay has to stay in Chrome's own process. A bubblewrap bind mount
+# puts Chrome in a user namespace, the kernel ignores the setgid bit on
+# 1Password-BrowserSupport, and the desktop app cannot unlock the extension.
 set -euo pipefail
 
 cache="${XDG_CACHE_HOME:-$HOME/.cache}/papaya"
@@ -116,14 +120,31 @@ PY
   fi
 }
 
+ensure_preload() {
+  local so="$cache/libpapaya-pak.so"
+  local code
+  code="$(cd "$(dirname "$0")" && pwd)/papaya-pak.c"
+  [[ -f $code ]] || return 1
+  command -v gcc >/dev/null || return 1
+  mkdir -p "$cache"
+  if [[ ! -f $so || $code -nt $so ]]; then
+    gcc -shared -fPIC -O2 -o "$so.new" "$code" -ldl || return 1
+    mv "$so.new" "$so"
+  fi
+  printf '%s\n' "$so"
+}
+
 export CHROME_VERSION_EXTRA="${CHROME_VERSION_EXTRA:-stable}"
 pak=""
-if [[ -f $src && -x /usr/bin/bwrap ]]; then
+preload=""
+if [[ -f $src ]]; then
   pak=$(prepare_pak || true)
 fi
 if [[ -n $pak ]]; then
-  exec /usr/bin/bwrap --share-net --dev-bind / / \
-    --bind "$pak" "$src" \
-    -- "$real" "${flags[@]}" "$@"
+  preload=$(ensure_preload || true)
+fi
+if [[ -n $pak && -n $preload ]]; then
+  export PAPAYA_RESOURCES_PAK="$pak"
+  export LD_PRELOAD="${preload}${LD_PRELOAD:+:$LD_PRELOAD}"
 fi
 exec "$real" "${flags[@]}" "$@"
