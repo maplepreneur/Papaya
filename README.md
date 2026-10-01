@@ -33,7 +33,7 @@ That replaces the Omarchy mark on the left of the bar and installs the screensav
 
 The command also registers a theme hook. After that, `omarchy theme install` and `omarchy theme set papaya` apply the logo, screensaver, prompt, and OpenCode theme themselves, because both finish by setting the theme. Choosing another theme puts back the prompt and OpenCode theme that were in place before Papaya, when those were saved.
 
-Selected text on web pages is papaya `#ff8000` with carbon text. Chrome’s address bar and the selected settings row are papaya as well. The address-bar selection follows `chromium.theme` (`14,12,11`), a near-carbon seed, so the window stays dark and that highlight is papaya with white text. The settings row is `#ff8000` with dark text. `bin/papaya-chrome` paints the row, and the installer registers it as the Chrome launcher. Quit Chrome and open it again after installing or updating the theme. An open window keeps the previous colors until then.
+Selected text on web pages is papaya `#ff8000` with carbon text. Chrome’s address bar and the selected settings row are papaya as well. The address-bar selection follows `chromium.theme` (`14,12,11`), a near-carbon seed, so the window stays dark and that highlight is papaya with white text. The settings row is `#ff8000` with dark text. `bin/papaya-chrome` paints the row, and the installer registers it as the Chrome launcher. The first launch compiles a small helper with `gcc`. Without `gcc`, Chrome still opens and the settings row keeps Chrome’s own color. Quit Chrome and open it again after installing or updating the theme. An open window keeps the previous colors until then.
 
 ## Update
 
