@@ -1,0 +1,11 @@
+[bar]
+# Replaces the generated [bar] section. Sizes match the current shell
+# template. Attention is papaya, not the template's red: the agent mark,
+# recording, and update alerts use this color. Errors stay rose.
+background       = "#0c0d0f"
+background-alpha = 1.0
+text             = "#f4f5f6"
+active           = "#ff8000"
+scale-with-font  = true
+size-horizontal  = 26
+size-vertical    = 28

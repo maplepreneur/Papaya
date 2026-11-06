@@ -1,15 +1,18 @@
 [controls]
-# Papaya control chrome. Omarchy merges this over the generated shell.toml
-# when the theme is applied, so buttons and switches follow the accent.
+# Papaya control chrome. Omarchy replaces the generated [controls] section
+# with this file. The shell and the screenshot editor share these tokens:
+# *-color is the ink, *-fill-alpha is the wash mixed over the surface, and
+# *-border is the stroke. Ink has to stay light. A carbon ink paints the
+# editor's button labels the same color as the buttons.
 
-# Idle boxes and off switches: carbon fill, papaya border.
-normal-color = "background"
-normal-fill-alpha = 1
+# Idle: light ink, a faint wash, a papaya stroke.
+normal-color = "foreground"
+normal-fill-alpha = 0.04
 normal-border = "accent"
 normal-border-width = 1
-normal-border-alpha = 1
+normal-border-alpha = 0.7
 
-# Hover and keyboard cursor: papaya edge, a light papaya wash.
+# Hover and keyboard cursor: papaya ink, a light papaya wash, a solid stroke.
 hover-cursor-color = "accent"
 hover-cursor-fill-alpha = 0.16
 hover-cursor-border = "accent"
@@ -22,9 +25,8 @@ focus-border = "accent"
 focus-border-width = 1
 focus-border-alpha = 1
 
-# Chosen shared controls: papaya border and a papaya wash. A fully solid fill
-# would sit under white label text in the stock buttons, so the network panel
-# paints its own solid papaya choice boxes with carbon text.
+# Chosen control: the same papaya wash. A solid fill would sit under the
+# label, so the network panel paints its own solid papaya choice boxes.
 selected-color = "accent"
 selected-fill-alpha = 0.22
 selected-border = "accent"
@@ -33,3 +35,4 @@ selected-border-alpha = 1
 
 pressed-color = "accent"
 pressed-fill-alpha = 0.34
+selection-fill-alpha = 0.35

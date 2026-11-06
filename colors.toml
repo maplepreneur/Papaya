@@ -32,5 +32,6 @@ bright_cyan = "#95e0e0"
 bright_blue = "#9ecfff"
 bright_magenta = "#dab7f1"
 
-# Active window border: deep papaya into #ff8000.
+# Active window border: deep papaya into #ff8000. Inactive is warm carbon.
 hyprland_active_border = "rgba(c45a00ee) rgba(ff8000ee) 45deg"
+hyprland_inactive_border = "rgba(3a3632aa)"
